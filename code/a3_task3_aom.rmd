@@ -1,0 +1,103 @@
+---
+title: "a3_task3_ali_martin"
+author: "Ali Martin"
+date: "10/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+library(kableExtra)
+library(lubridate)
+```
+
+## Read in the urchins data
+
+```{r}
+urchins <- read.csv(here("data", "urchins.csv")) %>% clean_names()
+
+```
+
+
+## Part 1: Size comparisons of purple and red urchins
+
+### Data Visualization
+
+Make a graph comparing sizes of purple and red urchins 
+```{r}
+ggplot(data = urchins,
+       aes(x = size)) +
+  geom_histogram(bins = 12, aes(fill = common_name)) +
+  scale_fill_manual(values = c("darkmagenta", "red2")) +
+theme_minimal() + 
+  labs(x = "Size (cm)",
+       y = "Number of Urchins",
+       title = "Size Distribution of Purple and Red Urchins in Santa Barbara",
+       fill = "Key") +
+  facet_wrap(~ common_name)
+        
+         
+  
+         
+```
+
+**Figure 1:** The above graph shows the size comparison of red and purple urchins observed at 5 different sites along the Santa Barbara coast. 
+
+### Descriptive Statistics Table
+
+```{r}
+urchins_stats <- urchins %>% #create descriptive stats table from urchins data
+  group_by(common_name) %>% #group by common name
+  summarize( #form a table
+    mean_urchins = round(mean(size), 2), #calculate mean and round sig figs
+    median_urchins = median(size), #calculate median and round sig figs
+    sd_urchins = round(sd(size), 2), #calculate std deviation and round sig figs
+    sample_size = n() #calculate sample size
+  )
+
+kable(urchins_stats, #create stats table usinc kablextra
+      caption ="Descriptive Statistics for purple and red urchin sizes", #form caption
+      col.names = c("Type of Urchin", #update column names
+                    "mean urchin size (cm)",
+                    "median urchin size (cm)",
+                    "Standard deviation of urchin size (cm)",
+                    "sample size")) %>% 
+  kable_styling(full_width=F)
+
+```
+
+Based on the histogram above, it is clear that the distribution of purple urchins is positively skewed, and the distribution of red urchins is closer to a normal distribution. The spread of purple urchins is less than the spread of the red urchins, but the purple urchins have a much higher median value than the red urchins.
+
+### Section 2: Explore purple urchin counts by size and year
+
+```{r}
+purple_urchins <- urchins %>% 
+  filter(common_name == "Purple Urchin") %>% #filter to include only purple urchins
+  mutate(date = mdy(date)) %>% #change date to class "date"
+  mutate (year = year(date)) %>%
+  mutate(site_full = case_when(
+    site =="NAPL" ~ "Naples Reef",
+    site == "AQUE" ~ "Arroyo Quemado Reef",
+    site == "CARP" ~ "Carpinteria Reef",
+    site == "MOHK" ~ "Mohawk Reef",
+    site == "IVEE" ~ "Isla Vista Reef"))
+  
+  
+```
+
+Store a table containing total number of purple urchins at each site by year
+
+```{r}
+purple_urchins %>% 
+  group_by(common_name, year, site_full) %>% 
+  summarize()
+    
+  
+```
+
+Make a finalized graph of counts of purple urchins recorded at each site per year
+
