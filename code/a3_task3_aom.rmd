@@ -5,7 +5,7 @@ date: "10/26/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 library(tidyverse)
@@ -72,7 +72,7 @@ kable(urchins_stats, #create stats table usinc kablextra
 
 Based on the histogram above, it is clear that the distribution of purple urchins is positively skewed, and the distribution of red urchins is closer to a normal distribution. The spread of purple urchins is less than the spread of the red urchins, but the purple urchins have a much higher median value than the red urchins.
 
-### Section 2: Explore purple urchin counts by size and year
+## Part 2: Explore purple urchin counts by size and year
 
 ```{r}
 purple_urchins <- urchins %>% 
@@ -89,15 +89,25 @@ purple_urchins <- urchins %>%
   
 ```
 
-Store a table containing total number of purple urchins at each site by year
+**Store a table containing total number of purple urchins at each site by year**
 
 ```{r}
-purple_urchins %>% 
-  group_by(common_name, year, site_full) %>% 
-  summarize()
+purple_urchins_table <- purple_urchins %>% 
+ count(site_full, year)
     
   
 ```
 
-Make a finalized graph of counts of purple urchins recorded at each site per year
+**Make a finalized graph of counts of purple urchins recorded at each site per year**
+```{r}
+ggplot(data = purple_urchins_table,
+       aes(x = year, y = n)) + 
+  geom_line(aes(color=site_full)) +
+  labs(x = "Year", y = "Number of Purple Urchins", title = "Total Number of Purple Urchins Recorded at Each Site per Year", color= "Site") +
+  theme_classic() +
+  facet_wrap(~ site_full, scales= "free")
+
+``````
+
+I think this graph does accurately describe the purple urchins count because the distribution shape of each subplot is similar, and so we can infer that the size distribution is consistent. However, there could be other multiple outside factors as to why there could be changes in the purple urchin population. For instance, climate change and changes in ocean acidification and habitat changes can also affect the distribution of the population. 
 
