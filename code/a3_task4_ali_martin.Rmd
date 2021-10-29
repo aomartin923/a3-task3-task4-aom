@@ -1,0 +1,88 @@
+---
+title: "Task 4: Naples Reef Purple Urchins"
+author: "Ali Martin"
+date: "10/28/2021"
+output: html_document
+---
+## Setup
+
+```{r setup, include=TRUE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message= FALSE, warning = FALSE)
+
+library(tidyverse)
+library(here)
+library(lubridate)
+library(janitor)
+library(kableExtra)
+```
+
+## Read in the data
+
+```{r}
+urchins_data <- read_csv(here("data", "urchins.csv")) %>% clean_names()
+```
+
+## Data Wrangling
+
+```{r}
+naples_urchins <-urchins_data %>% 
+  filter(common_name == "Purple Urchin") %>% 
+  group_by(treatment) %>% 
+  mutate(date= mdy(date)) %>%  #convert date to class "date"
+  mutate(year = year(date)) %>%  #create new column as year
+  mutate(site_full = case_when( #add in the full site names
+    site =="NAPL" ~ "Naples Reef",
+    site == "AQUE" ~ "Arroyo Quemado Reef",
+    site == "CARP" ~ "Carpinteria Reef",
+    site == "MOHK" ~ "Mohawk Reef",
+    site == "IVEE" ~ "Isla Vista Reef")) %>% 
+  filter(year == "2010") #filter to only include data from 2010
+  
+```
+
+## Data Visualization (Histogram and QQ Plot):
+
+
+```{r}
+ggplot(data = naples_urchins, #plot data from naples urchins
+       aes(x = size)) + #assign x value to size of urchin
+  geom_histogram(bins = 12, aes(fill = treatment)) + #plot histogram with 12 bins organized by treatment
+  scale_fill_manual (values = c("blue", "green")) + #assign color values and...
+  theme_classic() + #assign theme
+  labs(x = "size (cm)", y = "Number of Urchins", title = "Figure 1: Size Distribution of Naples Urchins By Treatment") + #assign labels
+  facet_wrap(~ treatment) #separate plots by treatment
+
+ggplot(data = naples_urchins, aes(sample = size)) + #plot 
+  geom_qq() + #make QQ plot
+  geom_qq_line() + #add qq line to show linear relationship
+  labs(title = "Figure 2: QQ Plot of Naples Urchin Size Distribution by Treatment") + #add title
+  facet_wrap(~treatment) #wrap to separate graphs by treatment
+```
+
+The above graphs shows that there is not a significant difference between the two distributions. On the histogram, both the Control and Annual graphs show a loose postively skewed distribution. The only significant difference I've noticed is that in the control, there are over 600 urchins that are within a size of around 5 cm, where as in the annual plot, there are less than 600 urchins with size ~5 cm .
+
+### Summary Table
+
+```{r}
+
+naples_urchins_stats <- naples_urchins %>% #create descriptive stats table from naples urchins data
+  group_by(treatment) %>% #group by treatment
+  summarize( #form a table
+    mean_naples_urchins = round(mean(size), 2), #calculate mean and round sig figs
+    median_naples_urchins = median(size), #calculate median and round sig figs
+    sd_naples_urchins = round(sd(size), 2), #calculate std deviation and round sig figs
+    sample_size = n() #calculate sample size
+  )
+
+kable(naples_urchins_stats, #create stats table using kablextra
+      caption ="Figure 3: Descriptive Statistics for purple Naples urchins for Annual and Control treatments", #form caption
+      col.names = c("Treatment", #update column names
+                    "mean urchin size (cm)",
+                    "median urchin size (cm)",
+                    "Standard deviation of urchin size (cm)",
+                    "sample size")) %>% 
+  kable_styling(full_width=F)
+
+```
+
+The summary table shows that the mean urchin size of both annual and control treatments is only off by .01. The median urchin size is exactly the same (4.5 cm) for both treatments, and the standard deviation is only off by .07, which is still very close as well. 
